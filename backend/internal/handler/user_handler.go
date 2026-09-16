@@ -101,9 +101,24 @@ func (h *UserHandler) Profile(c *gin.Context) {
 	origins, _ := h.noteSvc.TopOrigins(uint(id))
 	followers, following, _ := h.followSvc.Counts(uint(id))
 	likesReceived, _ := h.likeSvc.CountByUserNotes(uint(id))
-	favoriteCount, _ := h.favoriteSvc.CountByUser(uint(id))
-	recentFavorites, _ := h.favoriteSvc.ListByUser(uint(id), 5)
-	preference, _ := h.favoriteSvc.Preference(uint(id))
+	// Favorite count / recent favorites / preference are part of the profile
+	// picture. If any read fails the whole endpoint fails — never return a
+	// profile that silently shows zero favorites or an empty preference.
+	favoriteCount, err := h.favoriteSvc.CountByUser(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	recentFavorites, err := h.favoriteSvc.ListByUser(uint(id), 5)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	preference, err := h.favoriteSvc.Preference(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	c.JSON(http.StatusOK, dto.OK(gin.H{
 		"user":             u,
 		"note_count":       len(notes),
