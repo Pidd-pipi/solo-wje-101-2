@@ -1,0 +1,66 @@
+name: wjecoffeetaste
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-wjecoffeetaste}_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-coffeetaste}
+      POSTGRES_USER: ${DB_USER:-coffeetaste}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-coffeetaste_pwd}
+      TZ: Asia/Shanghai
+    ports:
+      - "${DB_PORT:-57601}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-coffeetaste} -d ${DB_NAME:-coffeetaste}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ${COMPOSE_PROJECT_NAME:-wjecoffeetaste}_backend
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-coffeetaste}
+      DB_PASSWORD: ${DB_PASSWORD:-coffeetaste_pwd}
+      DB_NAME: ${DB_NAME:-coffeetaste}
+      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_string}
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "${BACKEND_PORT:-29601}:8080"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-wjecoffeetaste}_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-28601}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  uploads:

@@ -1,0 +1,41 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]: ☕ 咖啡品鉴社区
+    - menubar [ref=e6]:
+      - menuitem "首页" [ref=e7] [cursor=pointer]
+      - menuitem "写品鉴笔记" [ref=e8] [cursor=pointer]
+      - menuitem "豆种库" [ref=e9] [cursor=pointer]
+      - menuitem "配方广场" [ref=e10] [cursor=pointer]
+    - button "登录/注册" [ref=e12] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - heading "记录每一杯咖啡的独特风味" [level=1] [ref=e17]
+        - paragraph [ref=e18]: 品鉴笔记 · 豆种库 · 冲煮配方 · 咖啡爱好者社区
+        - generic [ref=e19]:
+          - textbox "搜索咖啡名称 / 产地" [ref=e21]
+          - button "搜索" [ref=e23] [cursor=pointer]
+        - generic [ref=e25]:
+          - radiogroup "radio-group" [ref=e26]:
+            - generic [ref=e27]:
+              - radio "全部烘焙度" [checked] [ref=e28]
+              - generic [ref=e29] [cursor=pointer]: 全部烘焙度
+            - generic [ref=e30]:
+              - radio "浅烘" [ref=e31]
+              - generic [ref=e32] [cursor=pointer]: 浅烘
+            - generic [ref=e33]:
+              - radio "中烘" [ref=e34]
+              - generic [ref=e35] [cursor=pointer]: 中烘
+            - generic [ref=e36]:
+              - radio "深烘" [ref=e37]
+              - generic [ref=e38] [cursor=pointer]: 深烘
+          - radiogroup "radio-group" [ref=e39]:
+            - generic [ref=e40]:
+              - radio "最新" [checked] [ref=e41]
+              - generic [ref=e42] [cursor=pointer]: 最新
+            - generic [ref=e43]:
+              - radio "热门" [ref=e44]
+              - generic [ref=e45] [cursor=pointer]: 热门
+      - generic [ref=e46]:
+        - paragraph [ref=e65]: 暂无品鉴笔记
+        - button "写第一篇笔记" [ref=e67] [cursor=pointer]

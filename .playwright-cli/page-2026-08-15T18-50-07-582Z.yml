@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5] [cursor=pointer]: ☕ 咖啡品鉴社区
+      - menubar [ref=e6]:
+        - menuitem "首页" [ref=e7] [cursor=pointer]
+        - menuitem "写品鉴笔记" [ref=e8] [cursor=pointer]
+        - menuitem "豆种库" [ref=e9] [cursor=pointer]
+        - menuitem "配方广场" [ref=e10] [cursor=pointer]
+      - button "b barista" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: b
+        - text: barista
+    - main [ref=e14]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - heading "记录每一杯咖啡的独特风味" [level=1] [ref=e43]
+          - paragraph [ref=e44]: 品鉴笔记 · 豆种库 · 冲煮配方 · 咖啡爱好者社区
+          - generic [ref=e45]:
+            - textbox "搜索咖啡名称 / 产地" [ref=e47]
+            - button "搜索" [ref=e49] [cursor=pointer]
+          - generic [ref=e51]:
+            - radiogroup "radio-group" [ref=e52]:
+              - generic [ref=e53]:
+                - radio "全部烘焙度" [checked] [ref=e54]
+                - generic [ref=e55] [cursor=pointer]: 全部烘焙度
+              - generic [ref=e56]:
+                - radio "浅烘" [ref=e57]
+                - generic [ref=e58] [cursor=pointer]: 浅烘
+              - generic [ref=e59]:
+                - radio "中烘" [ref=e60]
+                - generic [ref=e61] [cursor=pointer]: 中烘
+              - generic [ref=e62]:
+                - radio "深烘" [ref=e63]
+                - generic [ref=e64] [cursor=pointer]: 深烘
+            - radiogroup "radio-group" [ref=e65]:
+              - generic [ref=e66]:
+                - radio "最新" [checked] [ref=e67]
+                - generic [ref=e68] [cursor=pointer]: 最新
+              - generic [ref=e69]:
+                - radio "热门" [ref=e70]
+                - generic [ref=e71] [cursor=pointer]: 热门
+        - generic [ref=e72]:
+          - generic [ref=e76] [cursor=pointer]:
+            - heading "冒烟耶加雪菲" [level=3] [ref=e77]
+            - generic [ref=e78]: 埃塞俄比亚 · 浅烘 · 手冲
+            - generic [ref=e79]:
+              - slider "rating" [disabled] [ref=e80]
+              - generic [ref=e121]: "8.0"
+            - generic [ref=e122]: 柑橘
+            - generic [ref=e125]: 👍 0 · 2026-08-16
+          - generic [ref=e131] [cursor=pointer]:
+            - heading "哥斯达黎加蜜处理" [level=3] [ref=e132]
+            - generic [ref=e133]: 哥斯达黎加 · 中烘 · 手冲
+            - generic [ref=e134]:
+              - slider "rating" [disabled] [ref=e135]
+              - generic [ref=e179]: "7.9"
+            - generic [ref=e180]:
+              - generic [ref=e181]: 莓果
+              - generic [ref=e183]: 红糖
+            - generic [ref=e185]: 👍 0 · 2026-08-16
+          - generic [ref=e191] [cursor=pointer]:
+            - heading "哥伦比亚慧兰" [level=3] [ref=e192]
+            - generic [ref=e193]: 哥伦比亚 · 中烘 · 法压
+            - generic [ref=e194]:
+              - slider "rating" [disabled] [ref=e195]
+              - generic [ref=e239]: "7.6"
+            - generic [ref=e240]:
+              - generic [ref=e241]: 坚果
+              - generic [ref=e243]: 焦糖
+            - generic [ref=e245]: 👍 1 · 2026-08-16
+          - generic [ref=e251] [cursor=pointer]:
+            - heading "埃塞俄比亚耶加雪菲" [level=3] [ref=e252]
+            - generic [ref=e253]: 埃塞俄比亚 · 浅烘 · 手冲
+            - generic [ref=e254]:
+              - slider "rating" [disabled] [ref=e255]
+              - generic [ref=e299]: "8.3"
+            - generic [ref=e300]:
+              - generic [ref=e301]: 柑橘
+              - generic [ref=e303]: 茉莉
+            - generic [ref=e305]: 👍 2 · 2026-08-16
+        - generic [ref=e306]:
+          - button "上一页" [disabled] [ref=e307]
+          - list [ref=e308]:
+            - listitem "第 1 页" [ref=e309]: "1"
+          - button "下一页" [disabled] [ref=e310]
+  - alert [ref=e311]:
+    - paragraph [ref=e315]: 登录成功

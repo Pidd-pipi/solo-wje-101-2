@@ -1,0 +1,77 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]: ☕ 咖啡品鉴社区
+    - menubar [ref=e6]:
+      - menuitem "首页" [ref=e7] [cursor=pointer]
+      - menuitem "写品鉴笔记" [ref=e8] [cursor=pointer]
+      - menuitem "豆种库" [ref=e9] [cursor=pointer]
+      - menuitem "配方广场" [ref=e10] [cursor=pointer]
+    - button "登录/注册" [ref=e12] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - heading "豆种库" [level=1] [ref=e16]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: 产地
+          - generic [ref=e22] [cursor=pointer]:
+            - generic:
+              - combobox "产地" [ref=e24]
+              - generic [ref=e25]: 全部产地
+        - generic [ref=e30]:
+          - generic [ref=e31]: 处理法
+          - generic [ref=e34] [cursor=pointer]:
+            - generic:
+              - combobox "处理法" [ref=e36]
+              - generic [ref=e37]: 全部处理法
+        - textbox "输入关键词搜索" [ref=e46]
+        - generic [ref=e49]:
+          - button "搜索" [ref=e50] [cursor=pointer]
+          - button "重置" [ref=e52] [cursor=pointer]
+      - generic [ref=e54]:
+        - generic [ref=e57]:
+          - heading "埃塞俄比亚耶加雪菲 水洗" [level=3] [ref=e58]:
+            - text: 埃塞俄比亚耶加雪菲
+            - generic: 水洗
+          - generic [ref=e59]: 埃塞俄比亚
+          - generic [ref=e60]:
+            - generic: 柑橘
+            - generic: 茉莉
+            - generic: 蜂蜜
+          - paragraph [ref=e61]: 经典水洗耶加雪菲，明亮柑橘酸质。
+        - generic [ref=e64]:
+          - heading "哥伦比亚慧兰 水洗" [level=3] [ref=e65]:
+            - text: 哥伦比亚慧兰
+            - generic: 水洗
+          - generic [ref=e66]: 哥伦比亚
+          - generic [ref=e67]:
+            - generic: 坚果
+            - generic: 焦糖
+            - generic: 红苹果
+          - paragraph [ref=e68]: 平衡甜感，坚果与焦糖尾韵。
+        - generic [ref=e71]:
+          - heading "哥斯达黎加蜜处理 蜜处理" [level=3] [ref=e72]:
+            - text: 哥斯达黎加蜜处理
+            - generic: 蜜处理
+          - generic [ref=e73]: 哥斯达黎加
+          - generic [ref=e74]:
+            - generic: 莓果
+            - generic: 红糖
+            - generic: 葡萄干
+          - paragraph [ref=e75]: 蜜处理带来醇厚甜感与莓果香气。
+        - generic [ref=e78]:
+          - heading "印尼曼特宁 水洗" [level=3] [ref=e79]:
+            - text: 印尼曼特宁
+            - generic: 水洗
+          - generic [ref=e80]: 印度尼西亚
+          - generic [ref=e81]:
+            - generic: 草本
+            - generic: 黑巧克力
+            - generic: 香料
+          - paragraph [ref=e82]: 醇厚浓郁，草本与黑巧风味。
+        - generic [ref=e85]:
+          - heading "冒烟豆1786819697 蜜处理" [level=3] [ref=e86]:
+            - text: 冒烟豆1786819697
+            - generic: 蜜处理
+          - generic [ref=e87]: 测试
+          - generic [ref=e88]: 甜
+          - paragraph [ref=e89]: smoke

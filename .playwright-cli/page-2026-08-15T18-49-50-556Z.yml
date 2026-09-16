@@ -1,0 +1,21 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]: ☕ 咖啡品鉴社区
+    - menubar [ref=e6]:
+      - menuitem "首页" [ref=e7] [cursor=pointer]
+      - menuitem "写品鉴笔记" [ref=e8] [cursor=pointer]
+      - menuitem "豆种库" [ref=e9] [cursor=pointer]
+      - menuitem "配方广场" [ref=e10] [cursor=pointer]
+    - button "登录/注册" [ref=e12] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e17]:
+      - heading "登录" [level=2] [ref=e18]
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e21]: 用户名
+          - textbox "用户名" [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]: 密码
+          - textbox "密码" [ref=e31]
+        - button "登录" [ref=e34] [cursor=pointer]
+      - button "没有账号？去注册" [ref=e36] [cursor=pointer]
