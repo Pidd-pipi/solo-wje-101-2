@@ -13,7 +13,9 @@ type CoffeeBeanRepository struct{ db *gorm.DB }
 func NewCoffeeBeanRepository(db *gorm.DB) *CoffeeBeanRepository { return &CoffeeBeanRepository{db: db} }
 
 // Create inserts a bean.
-func (r *CoffeeBeanRepository) Create(b *model.CoffeeBean) error { return translate(r.db.Create(b).Error) }
+func (r *CoffeeBeanRepository) Create(b *model.CoffeeBean) error {
+	return translate(r.db.Create(b).Error)
+}
 
 // FindByID locates a bean by id.
 func (r *CoffeeBeanRepository) FindByID(id uint) (*model.CoffeeBean, error) {
@@ -25,7 +27,9 @@ func (r *CoffeeBeanRepository) FindByID(id uint) (*model.CoffeeBean, error) {
 }
 
 // Update persists a bean.
-func (r *CoffeeBeanRepository) Update(b *model.CoffeeBean) error { return translate(r.db.Save(b).Error) }
+func (r *CoffeeBeanRepository) Update(b *model.CoffeeBean) error {
+	return translate(r.db.Save(b).Error)
+}
 
 // Delete removes a bean.
 func (r *CoffeeBeanRepository) Delete(id uint) error {
@@ -37,6 +41,23 @@ func (r *CoffeeBeanRepository) Delete(id uint) error {
 		return ErrNotFound
 	}
 	return nil
+}
+
+// DeleteTx removes a bean inside an existing transaction (used with favorite cleanup).
+func (r *CoffeeBeanRepository) DeleteTx(tx *gorm.DB, id uint) error {
+	res := tx.Delete(&model.CoffeeBean{}, id)
+	if res.Error != nil {
+		return translate(res.Error)
+	}
+	if res.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// RunInTx runs fn inside a database transaction.
+func (r *CoffeeBeanRepository) RunInTx(fn func(tx *gorm.DB) error) error {
+	return r.db.Transaction(fn)
 }
 
 // List filters beans by origin/process/keyword.

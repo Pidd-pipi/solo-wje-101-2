@@ -18,7 +18,20 @@
     <el-row :gutter="16">
       <el-col v-for="b in beans" :key="b.id" :xs="24" :sm="12" :md="8">
         <el-card class="bean-card" shadow="hover">
-          <h3>{{ b.name }} <el-tag size="small" type="warning">{{ ProcessMethodMap[b.process_method] }}</el-tag></h3>
+          <div class="card-head">
+            <h3>{{ b.name }} <el-tag size="small" type="warning">{{ ProcessMethodMap[b.process_method] }}</el-tag></h3>
+            <el-tooltip v-if="isLoggedIn" :content="b.is_favored ? '取消收藏' : '收藏豆种'" placement="top">
+              <el-button
+                circle
+                size="small"
+                :type="b.is_favored ? 'warning' : 'default'"
+                :loading="pendingIds.has(b.id)"
+                @click="toggleFav(b)"
+              >
+                <el-icon><StarFilled v-if="b.is_favored" /><Star v-else /></el-icon>
+              </el-button>
+            </el-tooltip>
+          </div>
           <div class="meta">{{ b.origin || '-' }}</div>
           <FlavorTags :tags="b.flavor_tags" />
           <p class="desc">{{ b.description }}</p>
@@ -50,23 +63,27 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Star, StarFilled } from '@element-plus/icons-vue'
 import SearchFilter from '@/components/common/SearchFilter.vue'
 import FlavorTags from '@/components/common/FlavorTags.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { useBeanStore } from '@/stores/useBeanStore'
 import { useAuth } from '@/hooks/useAuth'
 import { createBean, deleteBean } from '@/api/bean'
-import { ProcessMethodMap, type ProcessMethod } from '@/constants/bean'
+import { ProcessMethodMap, type ProcessMethod, type CoffeeBean } from '@/constants/bean'
 
 const store = useBeanStore()
-const { isAdmin } = useAuth()
+const router = useRouter()
+const { isLoggedIn, isAdmin } = useAuth()
 const beans = computed(() => store.beans)
 const origin = ref('')
 const process = ref('')
 const keyword = ref('')
 const showAdd = ref(false)
 const addForm = reactive({ name: '', origin: '', process_method: 'washed', flavor_tags: '[]', description: '' })
+const pendingIds = ref(new Set<number>())
 
 const ORIGINS = ['埃塞俄比亚', '哥伦比亚', '哥斯达黎加', '印度尼西亚']
 
@@ -97,14 +114,31 @@ async function addBean() {
 }
 async function removeBean(id: number) {
   await deleteBean(id)
-  ElMessage.success('已删除')
+  ElMessage.success('已下架豆种')
   await load()
+}
+async function toggleFav(bean: CoffeeBean) {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后再收藏豆种')
+    router.push('/login')
+    return
+  }
+  if (pendingIds.value.has(bean.id)) return
+  pendingIds.value.add(bean.id)
+  try {
+    const favored = await store.toggleFavorite(bean)
+    ElMessage.success(favored ? '已收藏豆种' : '已取消收藏')
+  } finally {
+    pendingIds.value.delete(bean.id)
+  }
 }
 </script>
 
 <style scoped>
 .page { max-width: 1200px; margin: 0 auto; }
 .bean-card { margin-bottom: 16px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-head h3 { margin: 0; }
 .meta { color: #999; font-size: 12px; margin: 6px 0; }
 .desc { color: #666; margin-top: 8px; }
 </style>

@@ -83,6 +83,18 @@ CREATE TABLE IF NOT EXISTS user_follows (
   PRIMARY KEY (follower_id, following_id)
 );
 
+-- 豆种收藏：唯一约束保证同一用户对同一豆种只有一条记录；
+-- ON DELETE CASCADE 作为兜底，豆种删除时收藏关系同步清除，避免失效项。
+CREATE TABLE IF NOT EXISTS bean_favorites (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  bean_id BIGINT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT idx_favorite_user_bean UNIQUE (user_id, bean_id),
+  CONSTRAINT fk_favorite_user FOREIGN KEY (user_id) REFERENCES users(id),
+  CONSTRAINT fk_favorite_bean FOREIGN KEY (bean_id) REFERENCES coffee_beans(id) ON DELETE CASCADE
+);
+
 -- 种子数据
 INSERT INTO users (username, email, password_hash, bio, role) VALUES
   ('admin', 'admin@coffeetaste.local', '$2a$10$VGETME6mK/u27yF1UwKHkuh0b36LjEpJjw2c4J2L7wPph1pcG0cVO', '咖啡平台管理员', 'admin'),
@@ -114,5 +126,10 @@ INSERT INTO likes (user_id, note_id) VALUES
   (1, 1);
 
 INSERT INTO user_follows (follower_id, following_id) VALUES
+  (2, 3),
+  (3, 2);
+
+INSERT INTO bean_favorites (user_id, bean_id) VALUES
+  (2, 1),
   (2, 3),
   (3, 2);

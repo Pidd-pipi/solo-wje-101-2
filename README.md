@@ -66,7 +66,7 @@ wje-101/
 │   ├── cmd/server/            # main.go + migrate/seed
 │   └── internal/
 │       ├── config/            # DB/JWT/限流/上传配置
-│       ├── model/             # 7 个实体
+│       ├── model/             # 8 个实体（含豆种收藏 BeanFavorite）
 │       ├── repository/        # 按实体分文件
 │       ├── service/           # 按实体分文件
 │       ├── handler/           # 按实体分文件 + upload
@@ -116,7 +116,7 @@ wje-101/
 | POST | /api/v1/users/login | 公开（限流） | 登录并返回 JWT |
 | GET | /api/v1/users/me | 登录 | 获取当前用户 |
 | PUT | /api/v1/users/me | 登录 | 更新当前用户资料 |
-| GET | /api/v1/users/:id/profile | 公开 | 用户主页（含统计） |
+| GET | /api/v1/users/:id/profile | 公开 | 用户主页（含统计、收藏数量、最近收藏、偏好画像） |
 | POST | /api/v1/users/:id/follow | 登录（限流） | 关注用户 |
 | DELETE | /api/v1/users/:id/follow | 登录 | 取消关注 |
 | GET | /api/v1/notes | 公开 | 品鉴笔记列表/筛选 |
@@ -132,10 +132,13 @@ wje-101/
 | GET | /api/v1/recipes | 公开 | 冲煮配方列表/筛选 |
 | GET | /api/v1/recipes/:id | 公开 | 冲煮配方详情 |
 | POST | /api/v1/recipes | 登录（限流） | 分享冲煮配方 |
-| GET | /api/v1/beans | 公开 | 咖啡豆库列表/筛选 |
+| GET | /api/v1/beans | 公开 | 咖啡豆库列表/筛选（登录后每项含 `is_favored`） |
 | POST | /api/v1/beans | admin（限流） | 新增咖啡豆 |
-| PUT | /api/v1/beans/:id | admin | 更新咖啡豆 |
-| DELETE | /api/v1/beans/:id | admin | 删除咖啡豆 |
+| PUT | /api/v1/beans/:id | admin | 更新咖啡豆（不影响已发布品鉴记录） |
+| DELETE | /api/v1/beans/:id | admin | 下架咖啡豆（事务级联清理其收藏关系） |
+| POST | /api/v1/beans/:id/favorite | 登录（限流） | 收藏豆种（重复收藏只保留一条） |
+| DELETE | /api/v1/beans/:id/favorite | 登录 | 取消收藏（幂等） |
+| GET | /api/v1/users/me/favorites | 登录 | 我的收藏（含总数，可传 `limit`） |
 
 ## 枚举出现位置清单
 
@@ -146,13 +149,20 @@ wje-101/
 
 ### ProcessMethod（washed/natural/honey/anaerobic）
 
-- 后端：`internal/constants/bean.go`（定义）、`internal/model/coffee_bean.go`（模型）、`internal/service/bean_service.go`（校验）、`internal/util/formatters.go`（ProcessText）、`internal/constants/log_templates.go`、`database/init.sql`
-- 前端：`src/constants/bean.ts`（定义）、`src/pages/BeanLibrary.vue`（筛选器+新增表单）
+- 后端：`internal/constants/bean.go`（定义）、`internal/model/coffee_bean.go`（模型）、`internal/service/bean_service.go`（校验）、`internal/service/favorite_service.go`（处理法偏好聚合）、`internal/util/formatters.go`（ProcessText）、`internal/constants/log_templates.go`、`database/init.sql`
+- 前端：`src/constants/bean.ts`（定义+收藏/画像类型）、`src/pages/BeanLibrary.vue`（筛选器+新增表单+收藏按钮）、`src/pages/Profile.vue`（处理法偏好+最近收藏）
 
 ### UserRole（user/admin）
 
 - 后端：`internal/constants/user.go`（定义）、`internal/model/user.go`、`internal/middleware/rbac.go`、`internal/router/beans.go`（管理员路由）、`internal/util/formatters.go`（RoleText）、`database/init.sql`
 - 前端：`src/constants/user.ts`（定义）、`src/router/index.ts`（守卫）、`src/pages/BeanLibrary.vue`（管理员按钮显隐）、`src/pages/Profile.vue`（角色标签）
+
+## 豆种收藏与偏好画像
+
+- 登录用户可在豆种库卡片上收藏 / 取消收藏，按钮状态以服务端返回为准；重复收藏走 upsert，`(user_id, bean_id)` 唯一约束保证只保留一条记录。
+- 豆种列表对登录用户回带每项的 `is_favored`，匿名访问统一为 `false`；取消收藏后卡片、收藏数量、个人主页画像均通过接口重新读取保持同步。
+- 个人主页新增：收藏数量、最近收藏（5 条）与偏好画像。画像由收藏豆种与品鉴记录汇总——烘焙偏好来自品鉴记录的 `roast_level`，处理法偏好来自收藏豆种的 `process_method`，风味偏好合并两者的 `flavor_tags` 计数。
+- 管理员下架豆种时在**同一事务**内删除该豆种的全部收藏关系，杜绝失效收藏；DB 层另有 `ON DELETE CASCADE` 兜底。管理员更新豆种只作用于豆种本身，已发布的品鉴记录按咖啡名称独立保存，不会被改坏。
 
 ## 横切关注点
 

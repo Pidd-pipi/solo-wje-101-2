@@ -13,7 +13,9 @@ type UserFollowRepository struct{ db *gorm.DB }
 func NewUserFollowRepository(db *gorm.DB) *UserFollowRepository { return &UserFollowRepository{db: db} }
 
 // Create inserts a follow.
-func (r *UserFollowRepository) Create(f *model.UserFollow) error { return translate(r.db.Create(f).Error) }
+func (r *UserFollowRepository) Create(f *model.UserFollow) error {
+	return translate(r.db.Create(f).Error)
+}
 
 // Find locates a follow.
 func (r *UserFollowRepository) Find(followerID, followingID uint) (*model.UserFollow, error) {

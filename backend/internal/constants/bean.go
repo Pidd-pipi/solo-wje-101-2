@@ -2,9 +2,9 @@ package constants
 
 // ProcessMethod enumerates coffee processing methods.
 const (
-	ProcessWashed   = "washed"
-	ProcessNatural  = "natural"
-	ProcessHoney    = "honey"
+	ProcessWashed    = "washed"
+	ProcessNatural   = "natural"
+	ProcessHoney     = "honey"
 	ProcessAnaerobic = "anaerobic"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/middleware"
 )
 
-func registerUserRoutes(v1 *gin.RouterGroup, cfg *config.Config, h *handler.UserHandler, fh *handler.FollowHandler, limiter *middleware.RateLimiter) {
+func registerUserRoutes(v1 *gin.RouterGroup, cfg *config.Config, h *handler.UserHandler, fh *handler.FollowHandler, favh *handler.FavoriteHandler, limiter *middleware.RateLimiter) {
 	users := v1.Group("/users")
 	users.POST("/register", limiter.Limit(), h.Register)
 	users.POST("/login", limiter.Limit(), h.Login)
@@ -18,4 +18,5 @@ func registerUserRoutes(v1 *gin.RouterGroup, cfg *config.Config, h *handler.User
 	me := users.Group("/me", middleware.AuthRequired(cfg))
 	me.GET("", h.GetProfile)
 	me.PUT("", h.UpdateProfile)
+	me.GET("/favorites", favh.Mine)
 }

@@ -10,6 +10,8 @@ const (
 	MsgRecipeCreated      = "冲煮配方已分享"
 	MsgBeanCreated        = "豆种已添加"
 	MsgBeanUpdated        = "豆种已更新"
+	MsgBeanFavored        = "已收藏豆种"
+	MsgBeanUnfavored      = "已取消收藏"
 	MsgCommentAdded       = "评论成功"
 	MsgLiked              = "点赞成功"
 	MsgUnliked            = "已取消点赞"

@@ -1,6 +1,7 @@
 import request from '@/utils/request'
 import type { UserInfo } from '@/constants/user'
 import type { TastingNote } from '@/constants/note'
+import type { FavoriteItem, TastePreference } from '@/constants/bean'
 
 export interface LoginResult { token: string; user: UserInfo }
 
@@ -13,6 +14,9 @@ export interface ProfileData {
   following: number
   likes_received: number
   notes: TastingNote[]
+  favorite_count: number
+  recent_favorites: FavoriteItem[]
+  preference: TastePreference
 }
 
 export function register(payload: { username: string; email: string; password: string; bio?: string }) {

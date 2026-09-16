@@ -13,7 +13,9 @@ type BrewRecipeRepository struct{ db *gorm.DB }
 func NewBrewRecipeRepository(db *gorm.DB) *BrewRecipeRepository { return &BrewRecipeRepository{db: db} }
 
 // Create inserts a recipe.
-func (r *BrewRecipeRepository) Create(rec *model.BrewRecipe) error { return translate(r.db.Create(rec).Error) }
+func (r *BrewRecipeRepository) Create(rec *model.BrewRecipe) error {
+	return translate(r.db.Create(rec).Error)
+}
 
 // FindByID locates a recipe by id.
 func (r *BrewRecipeRepository) FindByID(id uint) (*model.BrewRecipe, error) {

@@ -12,16 +12,16 @@ import (
 )
 
 type bucket struct {
-	count    int
-	resetAt  time.Time
+	count   int
+	resetAt time.Time
 }
 
 // RateLimiter is a per-IP token bucket limiter.
 type RateLimiter struct {
-	mu      sync.Mutex
-	limits  map[string]*bucket
-	reqs    int
-	window  time.Duration
+	mu     sync.Mutex
+	limits map[string]*bucket
+	reqs   int
+	window time.Duration
 }
 
 // NewRateLimiter creates a limiter allowing reqs requests per window.

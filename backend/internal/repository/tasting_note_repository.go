@@ -10,10 +10,14 @@ import (
 type TastingNoteRepository struct{ db *gorm.DB }
 
 // NewTastingNoteRepository creates the repository.
-func NewTastingNoteRepository(db *gorm.DB) *TastingNoteRepository { return &TastingNoteRepository{db: db} }
+func NewTastingNoteRepository(db *gorm.DB) *TastingNoteRepository {
+	return &TastingNoteRepository{db: db}
+}
 
 // Create inserts a note.
-func (r *TastingNoteRepository) Create(n *model.TastingNote) error { return translate(r.db.Create(n).Error) }
+func (r *TastingNoteRepository) Create(n *model.TastingNote) error {
+	return translate(r.db.Create(n).Error)
+}
 
 // FindByID locates a note by id.
 func (r *TastingNoteRepository) FindByID(id uint) (*model.TastingNote, error) {
@@ -25,7 +29,9 @@ func (r *TastingNoteRepository) FindByID(id uint) (*model.TastingNote, error) {
 }
 
 // Update persists a note.
-func (r *TastingNoteRepository) Update(n *model.TastingNote) error { return translate(r.db.Save(n).Error) }
+func (r *TastingNoteRepository) Update(n *model.TastingNote) error {
+	return translate(r.db.Save(n).Error)
+}
 
 // Delete removes a note by id.
 func (r *TastingNoteRepository) Delete(id uint) error {
@@ -97,4 +103,29 @@ func (r *TastingNoteRepository) TopOrigins(userID uint) ([]string, error) {
 		return nil, err
 	}
 	return origins, nil
+}
+
+// RoastCountsByUser groups a user's notes by roast level.
+func (r *TastingNoteRepository) RoastCountsByUser(userID uint) ([]CountItem, error) {
+	var items []CountItem
+	if err := r.db.Model(&model.TastingNote{}).
+		Select("roast_level AS key, COUNT(*) AS count").
+		Where("user_id = ? AND roast_level <> ''", userID).
+		Group("roast_level").
+		Order("count DESC, roast_level ASC").
+		Scan(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// FlavorCountsByUser counts flavor tags across a user's notes.
+func (r *TastingNoteRepository) FlavorCountsByUser(userID uint) ([]CountItem, error) {
+	var raws []string
+	if err := r.db.Model(&model.TastingNote{}).
+		Where("user_id = ?", userID).
+		Pluck("flavor_tags", &raws).Error; err != nil {
+		return nil, err
+	}
+	return countFlavorTags(raws), nil
 }

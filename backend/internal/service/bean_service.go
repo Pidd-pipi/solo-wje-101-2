@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"gorm.io/gorm"
+
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/constants"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/model"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/repository"
@@ -13,13 +15,14 @@ import (
 
 // BeanService handles coffee bean library.
 type BeanService struct {
-	repo   *repository.CoffeeBeanRepository
-	logger *slog.Logger
+	repo         *repository.CoffeeBeanRepository
+	favoriteRepo *repository.BeanFavoriteRepository
+	logger       *slog.Logger
 }
 
 // NewBeanService creates a BeanService.
-func NewBeanService(repo *repository.CoffeeBeanRepository, logger *slog.Logger) *BeanService {
-	return &BeanService{repo: repo, logger: logger}
+func NewBeanService(repo *repository.CoffeeBeanRepository, favoriteRepo *repository.BeanFavoriteRepository, logger *slog.Logger) *BeanService {
+	return &BeanService{repo: repo, favoriteRepo: favoriteRepo, logger: logger}
 }
 
 // Create adds a bean (admin).
@@ -74,11 +77,30 @@ func (s *BeanService) Update(id uint, b *model.CoffeeBean) (*model.CoffeeBean, e
 	return exist, nil
 }
 
-// Delete removes a bean (admin).
+// Delete removes a bean (admin) together with its favorite relations, in one
+// transaction so no orphan favorite can survive a de-listing.
 func (s *BeanService) Delete(id uint) error {
-	if err := s.repo.Delete(id); err != nil {
+	if _, err := s.repo.FindByID(id); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return util.NewAppError(404, constants.CodeNotFound,
+				fmt.Sprintf("CoffeeBean[id=%d] delete failed: bean not found", id))
+		}
+		return fmt.Errorf("bean delete find: %w", err)
+	}
+	err := s.repo.RunInTx(func(tx *gorm.DB) error {
+		if err := s.favoriteRepo.DeleteByBean(tx, id); err != nil {
+			return fmt.Errorf("bean delete favorites: %w", err)
+		}
+		return s.repo.DeleteTx(tx, id)
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return util.NewAppError(404, constants.CodeNotFound,
+				fmt.Sprintf("CoffeeBean[id=%d] delete failed: bean not found", id))
+		}
 		return fmt.Errorf("bean delete: %w", err)
 	}
+	s.logger.Info(fmt.Sprintf(constants.LogBeanFavoritesCleaned, id), "id", id)
 	s.logger.Info(fmt.Sprintf(constants.LogBeanDeleteSuccess, id), "id", id)
 	return nil
 }

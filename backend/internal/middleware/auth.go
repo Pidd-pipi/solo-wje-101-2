@@ -46,6 +46,21 @@ func GetUserID(c *gin.Context) uint {
 	return claims.UserID
 }
 
+// OptionalAuth injects claims when a valid Bearer token is present, but never
+// blocks anonymous requests. Used by public endpoints that personalize output
+// (e.g. the bean list stamps is_favored for logged-in viewers).
+func OptionalAuth(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		if strings.HasPrefix(header, "Bearer ") {
+			if claims, err := util.ParseToken(strings.TrimPrefix(header, "Bearer "), cfg.JWTSecret); err == nil {
+				c.Set(UserKey, claims)
+			}
+		}
+		c.Next()
+	}
+}
+
 // GetUserRole extracts the authenticated user role from the context.
 func GetUserRole(c *gin.Context) string {
 	v, ok := c.Get(UserKey)
