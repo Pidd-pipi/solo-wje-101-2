@@ -96,14 +96,35 @@ func (h *UserHandler) Profile(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	notes, _ := h.noteSvc.ListByUser(uint(id))
-	avg, _ := h.noteSvc.AvgScore(uint(id))
-	origins, _ := h.noteSvc.TopOrigins(uint(id))
-	followers, following, _ := h.followSvc.Counts(uint(id))
-	likesReceived, _ := h.likeSvc.CountByUserNotes(uint(id))
-	// Favorite count / recent favorites / preference are part of the profile
-	// picture. If any read fails the whole endpoint fails — never return a
-	// profile that silently shows zero favorites or an empty preference.
+
+	// Every statistic is part of the profile. If ANY read fails the whole
+	// endpoint fails (retryable) rather than returning a 200 that renders the
+	// failed part as a zero value or empty list.
+	notes, err := h.noteSvc.ListByUser(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	avg, err := h.noteSvc.AvgScore(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	origins, err := h.noteSvc.TopOrigins(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	followers, following, err := h.followSvc.Counts(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	likesReceived, err := h.likeSvc.CountByUserNotes(uint(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	favoriteCount, err := h.favoriteSvc.CountByUser(uint(id))
 	if err != nil {
 		c.Error(err)

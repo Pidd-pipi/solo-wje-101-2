@@ -13,6 +13,17 @@ import (
 // ErrInjected is the sentinel returned when a fault switch is ON.
 var ErrInjected = errors.New("testsupport: injected storage read failure (recoverable)")
 
+// Profile statistic fault kinds. Each targets one Profile read so tests can
+// prove the whole profile fails (rather than zeroing that statistic) per source.
+const (
+	ProfileFaultNone    int32 = 0
+	ProfileFaultNotes   int32 = 1 // ListByUser: tasting note history
+	ProfileFaultAvg     int32 = 2 // AvgScore: average overall score
+	ProfileFaultOrigins int32 = 3 // TopOrigins: favorite origins grouping
+	ProfileFaultFollow  int32 = 4 // follower/following counts
+	ProfileFaultLikes   int32 = 5 // likes received
+)
+
 // Fault is a runtime, concurrently-safe, recoverable switchboard that intercepts
 // executed SQL at the connection-pool layer. Intercepting there (instead of a
 // GORM query callback) ensures .Scan()/.Find()/.Count() paths are ALL covered,
@@ -26,6 +37,9 @@ type Fault struct {
 	// failProfilePreference targets the roast-level grouping, the first
 	// aggregation of FavoriteService.Preference: ... GROUP BY roast_level.
 	failProfilePreference atomic.Bool
+
+	// profileStat selects one profile-statistic read to fail (ProfileFault*).
+	profileStat atomic.Int32
 }
 
 // NewFault returns an initially-off switchboard.
@@ -50,6 +64,10 @@ func (f *Fault) SetFavoriteStateFault(on bool) { f.failFavoriteState.Store(on) }
 // SetProfilePreferenceFault flips the profile preference read fault on/off.
 func (f *Fault) SetProfilePreferenceFault(on bool) { f.failProfilePreference.Store(on) }
 
+// SetProfileStatFault makes one profile-statistic read fail (see ProfileFault*).
+// Pass ProfileFaultNone to recover.
+func (f *Fault) SetProfileStatFault(kind int32) { f.profileStat.Store(kind) }
+
 // shouldFail inspects the final SQL for an active fault signature. Identifier
 // quotes (backticks from SQLite, double quotes elsewhere) are stripped so the
 // match is dialect-independent.
@@ -71,6 +89,39 @@ func (f *Fault) shouldFail(query string) bool {
 		if strings.Contains(q, "from tasting_notes") &&
 			strings.Contains(q, "group by") &&
 			strings.Contains(q, "roast_level") {
+			return true
+		}
+	}
+	switch f.profileStat.Load() {
+	case ProfileFaultNotes:
+		// Tasting history: full-row note read for one user (Find, not an
+		// aggregate/pluck which select explicit columns).
+		if strings.HasPrefix(strings.TrimSpace(q), "select * from tasting_notes") &&
+			strings.Contains(q, "where user_id") {
+			return true
+		}
+	case ProfileFaultAvg:
+		if strings.Contains(q, "avg(overall_score)") &&
+			strings.Contains(q, "from tasting_notes") {
+			return true
+		}
+	case ProfileFaultOrigins:
+		// TopOrigins plucks origin with GROUP BY origin.
+		if strings.Contains(q, "select origin from tasting_notes") &&
+			strings.Contains(q, "group by") &&
+			strings.Contains(q, "origin") {
+			return true
+		}
+	case ProfileFaultFollow:
+		// FollowService.Counts: count(*) over user_follows (either direction).
+		if strings.Contains(q, "from user_follows") &&
+			strings.Contains(q, "count(") {
+			return true
+		}
+	case ProfileFaultLikes:
+		// LikeRepository.CountByUserNotes joins likes -> tasting_notes.
+		if strings.Contains(q, "from likes") &&
+			strings.Contains(q, "join tasting_notes") {
 			return true
 		}
 	}
