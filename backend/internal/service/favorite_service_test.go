@@ -20,7 +20,10 @@ func newFavoriteServiceForTest() *FavoriteService {
 func TestDecorateAnonymousAllFalse(t *testing.T) {
 	svc := newFavoriteServiceForTest()
 	beans := []model.CoffeeBean{{ID: 1}, {ID: 2}}
-	cards := svc.Decorate(beans, 0)
+	cards, err := svc.Decorate(beans, 0)
+	if err != nil {
+		t.Fatalf("decorate anonymous: %v", err)
+	}
 	if len(cards) != 2 {
 		t.Fatalf("expected 2 cards, got %d", len(cards))
 	}

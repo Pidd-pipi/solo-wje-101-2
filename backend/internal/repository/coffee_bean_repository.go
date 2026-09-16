@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	"gorm.io/gorm"
 
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/model"
@@ -60,6 +62,21 @@ func (r *CoffeeBeanRepository) RunInTx(fn func(tx *gorm.DB) error) error {
 	return r.db.Transaction(fn)
 }
 
+// likePattern turns a raw keyword into a literal substring pattern.
+// It escapes LIKE meta-characters (%, _, \) so a keyword containing them is
+// matched as ordinary text; backslash is declared as the ESCAPE char in SQL.
+func likePattern(keyword string) string {
+	var sb strings.Builder
+	for _, r := range keyword {
+		switch r {
+		case '\\', '%', '_':
+			sb.WriteByte('\\')
+		}
+		sb.WriteRune(r)
+	}
+	return "%" + sb.String() + "%"
+}
+
 // List filters beans by origin/process/keyword.
 func (r *CoffeeBeanRepository) List(origin, process, keyword string, page, pageSize int) ([]model.CoffeeBean, int64, error) {
 	var items []model.CoffeeBean
@@ -71,9 +88,14 @@ func (r *CoffeeBeanRepository) List(origin, process, keyword string, page, pageS
 	if process != "" {
 		q = q.Where("process_method = ?", process)
 	}
-	if keyword != "" {
-		like := "%" + keyword + "%"
-		q = q.Where("name LIKE ? OR flavor_tags LIKE ?", like, like)
+	// Keyword matches name, description and flavor tags. flavor_tags is JSON in
+	// Postgres, so it must be cast to text; CAST(... AS TEXT) also works on the
+	// SQLite test driver. The OR group is parenthesized so it composes with the
+	// AND origin/process filters. Pattern args are bound placeholders.
+	if kw := strings.TrimSpace(keyword); kw != "" {
+		pattern := likePattern(kw)
+		q = q.Where("(name LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\' OR CAST(flavor_tags AS TEXT) LIKE ? ESCAPE '\\')",
+			pattern, pattern, pattern)
 	}
 	if err := q.Count(&total).Error; err != nil {
 		return nil, 0, err

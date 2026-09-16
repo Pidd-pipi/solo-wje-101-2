@@ -6,6 +6,7 @@ import (
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 
+	"github.com/wjecoffeetaste/wjecoffeetaste/internal/dto"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/model"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/repository"
 )
@@ -131,5 +132,84 @@ func TestFavoriteCleanupOnBeanDelete(t *testing.T) {
 	}
 	if _, err := beanRepo.FindByID(b1.ID); err == nil {
 		t.Fatal("expected de-listed bean to be gone")
+	}
+}
+
+func TestDecorateFavoriteStateConsistencyAcrossRequests(t *testing.T) {
+	db := newFavoriteTestDB(t)
+	beanRepo := repository.NewCoffeeBeanRepository(db)
+	noteRepo := repository.NewTastingNoteRepository(db)
+	favRepo := repository.NewBeanFavoriteRepository(db)
+	svc := NewFavoriteService(favRepo, beanRepo, noteRepo, newTestLogger())
+
+	const uid uint = 1
+	b1 := &model.CoffeeBean{Name: "豆一", ProcessMethod: "washed", FlavorTags: `["柑橘"]`}
+	b2 := &model.CoffeeBean{Name: "豆二", ProcessMethod: "natural", FlavorTags: `["莓果"]`}
+	_ = beanRepo.Create(b1)
+	_ = beanRepo.Create(b2)
+	all := []model.CoffeeBean{*b1, *b2}
+
+	findCard := func(cards []dto.BeanCard, id uint) *dto.BeanCard {
+		for i := range cards {
+			if cards[i].ID == id {
+				return &cards[i]
+			}
+		}
+		return nil
+	}
+
+	// Request 1: not favored yet.
+	cards, err := svc.Decorate(all, uid)
+	if err != nil {
+		t.Fatalf("decorate: %v", err)
+	}
+	if findCard(cards, b1.ID).IsFavored || findCard(cards, b2.ID).IsFavored {
+		t.Fatal("both should be un-favored initially")
+	}
+
+	// Favorite b1; repeated readbacks must show b1 favored, b2 not.
+	if _, err := svc.Favorite(uid, b1.ID); err != nil {
+		t.Fatalf("favorite: %v", err)
+	}
+	for i := 0; i < 3; i++ { // consecutive requests
+		cards, err = svc.Decorate(all, uid)
+		if err != nil {
+			t.Fatalf("decorate repeat %d: %v", i, err)
+		}
+		if !findCard(cards, b1.ID).IsFavored || findCard(cards, b2.ID).IsFavored {
+			t.Fatalf("request %d: expected b1=true b2=false", i)
+		}
+	}
+
+	// Anonymous viewer must always see false even though uid favors b1.
+	anon, err := svc.Decorate(all, 0)
+	if err != nil {
+		t.Fatalf("decorate anon: %v", err)
+	}
+	if findCard(anon, b1.ID).IsFavored {
+		t.Fatal("anonymous viewer must not see favored state")
+	}
+
+	// Cancel -> next readback reflects false; another viewer's state is untouched.
+	if _, err := svc.Unfavorite(uid, b1.ID); err != nil {
+		t.Fatalf("unfavorite: %v", err)
+	}
+	cards, _ = svc.Decorate(all, uid)
+	if findCard(cards, b1.ID).IsFavored {
+		t.Fatal("b1 should read back un-favored after cancel")
+	}
+
+	// Different user favorites b1; uid still sees it as un-favored (per-user state).
+	const other uint = 2
+	if _, err := svc.Favorite(other, b1.ID); err != nil {
+		t.Fatalf("other favorite: %v", err)
+	}
+	cards, _ = svc.Decorate(all, uid)
+	if findCard(cards, b1.ID).IsFavored {
+		t.Fatal("uid must not inherit another user's favorite")
+	}
+	cardsOther, _ := svc.Decorate(all, other)
+	if !findCard(cardsOther, b1.ID).IsFavored {
+		t.Fatal("other user should see their own favored state")
 	}
 }

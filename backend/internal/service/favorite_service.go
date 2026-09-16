@@ -93,22 +93,26 @@ func (s *FavoriteService) IDSetByUser(userID uint) (map[uint]struct{}, error) {
 }
 
 // Decorate stamps is_favored onto beans for the logged-in viewer (anonymous: all false).
-func (s *FavoriteService) Decorate(beans []model.CoffeeBean, viewerID uint) []dto.BeanCard {
+// It fails the whole call when the favorite-state read fails, so a query error can
+// never silently present beans as un-favored (no half-rendered, misleading page).
+func (s *FavoriteService) Decorate(beans []model.CoffeeBean, viewerID uint) ([]dto.BeanCard, error) {
 	cards := make([]dto.BeanCard, 0, len(beans))
 	if len(beans) == 0 {
-		return cards
+		return cards, nil
 	}
 	var favored map[uint]struct{}
 	if viewerID != 0 {
-		if set, err := s.repo.IDSetByUser(viewerID); err == nil {
-			favored = set
+		set, err := s.repo.IDSetByUser(viewerID)
+		if err != nil {
+			return nil, fmt.Errorf("decorate favorite state: %w", err)
 		}
+		favored = set
 	}
 	for _, b := range beans {
 		_, isFavored := favored[b.ID]
 		cards = append(cards, dto.BeanCard{CoffeeBean: b, IsFavored: isFavored})
 	}
-	return cards
+	return cards, nil
 }
 
 // Preference aggregates roast/process/flavor preferences from favored beans and notes.

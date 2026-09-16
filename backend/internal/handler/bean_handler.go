@@ -46,7 +46,12 @@ func (h *BeanHandler) List(c *gin.Context) {
 		return
 	}
 	// Stamp the latest favorite state for the logged-in viewer (anonymous -> false).
-	cards := h.favoriteSvc.Decorate(items, middleware.GetUserID(c))
+	// If this read fails, return an error rather than a partial page with false states.
+	cards, err := h.favoriteSvc.Decorate(items, middleware.GetUserID(c))
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	c.JSON(http.StatusOK, dto.OK(dto.PageData{List: cards, Total: total, Page: page, Size: pageSize}))
 }
 

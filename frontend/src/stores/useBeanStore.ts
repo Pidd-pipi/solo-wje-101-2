@@ -7,9 +7,15 @@ import type { CoffeeBean } from '@/constants/bean'
 export const useBeanStore = defineStore('bean', () => {
   const beans = ref<CoffeeBean[]>([])
   const total = ref(0)
+  // Monotonic token: only the most recent load() may commit, so fast consecutive
+  // filters/searches/resets cannot let a slow stale response overwrite fresh data.
+  let loadSeq = 0
 
   async function load(params: { page?: number; page_size?: number; origin?: string; process?: string; keyword?: string } = {}) {
+    const seq = ++loadSeq
     const res = await listBeans(params)
+    // Drop responses from a superseded request entirely (no half/stale page).
+    if (seq !== loadSeq) return
     beans.value = res.list
     total.value = res.total
   }
